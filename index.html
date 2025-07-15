@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasySite - Каталог готовых сайтов</title>
+    <meta name="description" content="Покупайте профессиональные готовые сайты для вашего бизнеса. Лендинги, интернет-магазины, портфолио.">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="script.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #06b6d4;
+            --accent: #ec4899;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+        
+        .dark body {
+            background-color: var(--dark);
+            color: var(--light);
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .site-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .site-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .site-card img {
+            transition: transform 0.3s;
+        }
+        
+        .site-card:hover img {
+            transform: scale(1.03);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent);
+            transition: background-color 0.3s;
+        }
+        
+        .btn-accent:hover {
+            background-color: #db2777;
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+        
+        .modal {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Адаптация под Telegram WebApp */
+        .tg-header {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .tg-content {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Шапка приложения -->
+    <header class="tg-header fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md z-50">
+        <div class="container mx-auto px-4 h-24 flex items-center">
+            <div class="flex justify-between items-center w-full">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold">EasySite</h1>
+                </div>
+
+                <div class="flex justify-end items-center">
+                    <button id="burger-button" class="text-3xl z-50 relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Выезжающее меню справа -->
+                <div id="mobile-menu" class="fixed inset-y-0 right-0 w-64 bg-white dark:bg-gray-900 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-lg">
+                    <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-lg font-bold">Меню</h2>
+                        <button id="close-menu" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <ul class="flex flex-col space-y-4 p-4">
+                        <li><a href="#home" class="nav-link" data-page="home">Главная</a></li>
+                        <li><a href="#catalog" class="nav-link" data-page="catalog">Каталог</a></li>
+                        <li><a href="#about" class="nav-link" data-page="about">О нас</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Основное содержимое -->
+    <main class="tg-content pt-32 pb-20 container mx-auto px-4">
+        <!-- Главная страница -->
+        <div id="home" class="page active">
+            <section class="hero rounded-xl p-8 text-white mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Добро пожаловать в EasySite!</h2>
+                <p class="text-xl mb-6">Покупайте готовые сайты быстро и удобно</p>
+                <button id="go-to-catalog" class="btn-accent px-6 py-3 rounded-lg font-medium text-white shadow-lg hover:shadow-xl transition">
+                    Перейти к каталогу
+                </button>
+            </section>
+            
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6">Почему выбирают нас?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Быстрая доставка</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Получите готовый сайт через несколько дней после адаптации под ваши требования</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Доступные цены</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Готовые решения дешевле индивидуальной разработки в 3-5 раз.</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Гарантия качества</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Все сайты проходят тщательное тестирование перед продажей.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                <h2 class="text-2xl font-bold mb-6">Как это работает?</h2>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                    <div class="flex flex-col space-y-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 mt-1">1</div>
+                            <div>
+                                <h3 class="font-bold">Выберите сайт</h3>
+                                <p class="text-gray-600 dark:text-gray-400">Просмотрите наш каталог и выберите подходящий вариант.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 mt-1">2</div>
+                            <div>
+                                <h3 class="font-bold">Оформите заказ</h3>
+                                <p class="text-gray-600 dark:text-gray-400">Нажмите кнопку "Купить" и следуйте инструкциям.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-4 mt-1">3</div>
+                            <div>
+                                <h3 class="font-bold">Получите сайт</h3>
+                                <p class="text-gray-600 dark:text-gray-400">После оплаты вы получите все файлы сайта и инструкции по установке.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Каталог сайтов -->
+        <div id="catalog" class="page">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <h2 class="text-2xl font-bold mb-4 md:mb-0">Каталог сайтов</h2>
+                <div class="w-full md:w-auto flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="filter flex space-x-4">
+                        <!-- Фильтр по категории -->
+                        <div class="relative w-full md:w-auto">
+                            <select id="category-filter" class="appearance-none w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">Все категории</option>
+                                <option value="landing">Лендинги</option>
+                                <option value="shop">Интернет-магазины</option>
+                                <option value="portfolio">Портфолио</option>
+                                <option value="blog">Блоги</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Фильтр по теме -->
+                        <div class="relative w-full md:w-auto">
+                            <select id="theme-filter" class="appearance-none w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">Все темы</option>
+                                <option value="light">Светлая тема</option>
+                                <option value="dark">Тёмная тема</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Поле поиска -->
+                    <div class="relative w-full md:w-auto">
+                        <input type="text" id="search-input" placeholder="Поиск по названию..." class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div id="sites-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Карточки сайтов будут добавлены через JavaScript -->
+            </div>
+        </div>
+        
+        <!-- О нас / Контакты -->
+        <div id="about" class="page">
+            <h2 class="text-2xl font-bold mb-6">О нас</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8">
+                <p class="mb-4">Мы создаём профессиональные сайты для вашего успеха. Наша команда дизайнеров и разработчиков трудится над тем, чтобы предоставить вам лучшие готовые решения для вашего бизнеса.</p>
+                <p>EasySite — это платформа, где вы можете приобрести качественный сайт по доступной цене без долгого ожидания разработки с нуля.</p>
+            </div>
+            
+            <h2 class="text-2xl font-bold mb-6">Контакты</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+                <div class="flex flex-col space-y-4">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Email</h3>
+                            <a href="mailto:info@seasysite.com" class="text-blue-500 hover:underline">info@easysite.com</a>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Telegram</h3>
+                            <a href="https://t.me/easysite_bot" class="text-blue-500 hover:underline" target="_blank">@easysite_bot</a>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Поддержка</h3>
+                            <p>Доступна 24/7 через Telegram-бота</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно для деталей сайта -->
+    <div id="site-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="modal bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <img id="modal-image" src="" alt="" class="w-full h-auto rounded-lg mb-4">
+                    <div class="flex items-center mb-2">
+                        <span id="modal-category" class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"></span>
+                        <span id="modal-price" class="ml-auto text-xl font-bold"></span>
+                    </div>
+                    <p id="modal-description" class="text-gray-700 dark:text-gray-300 mb-4"></p>
+                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="modal-time">Срок разработки: 1-3 дня</span>
+                    </div>
+                </div>
+
+                <button id="buy-button" class="btn-primary w-full py-3 rounded-lg font-medium text-white shadow-lg hover:shadow-xl transition">
+                    Посмотреть сайт
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
