@@ -1,13 +1,13 @@
 // Инициализация Telegram WebApp
-window.addEventListener('DOMContentLoaded', () => {
-    const tg = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 
-    if (!tg) {
-      console.error("Telegram WebApp не инициализирован.");
-      return;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  if (!tg) {
+    console.error("tg не определён. Telegram WebApp API не загружен.");
+    return;
+  }
 
-    tg.ready();
+  tg.ready();
   
 // Бургер-меню
 let mobileMenu;
@@ -344,5 +344,4 @@ const sites = [
         time: "1-3 дня"
     }
 ];
-    initApp();
 });
