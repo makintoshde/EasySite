@@ -18,6 +18,25 @@
             --dark: #1e293b;
             --light: #f8fafc;
         }
+
+        .tg-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 96px;
+            z-index: 50;
+            background: inherit;
+        }
+
+        .tg-content {
+            margin-top: 96px !important;
+            min-height: calc(100vh - 96px);
+        }
+
+        body {
+            padding-top: 0 !important;
+        }
         
         body {
             font-family: 'Inter', sans-serif;
@@ -166,7 +185,7 @@
 
 
     <!-- Основное содержимое -->
-    <main class="tg-content pt-32 pb-20 container mx-auto px-4">
+    <main class="tg-content pt-8 pb-20 container mx-auto px-4">
         <!-- Главная страница -->
         <div id="home" class="page active">
             <section class="hero rounded-xl p-8 text-white mb-10">

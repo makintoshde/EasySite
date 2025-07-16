@@ -187,33 +187,17 @@ function updateNavLinks(activePage) {
 }
 
 function adjustLayout() {
-    const header = document.querySelector('header');
-    const main = document.querySelector('main');
+  const header = document.querySelector('.tg-header');
+  const main = document.querySelector('.tg-content');
+  
+  if (header && main) {
+    // Учитываем safe-area (актуально для iPhone)
+    const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0;
+    const headerHeight = header.offsetHeight + safeArea;
     
-    if (header && main) {
-        // Получаем полную высоту шапки с учетом padding
-        const headerHeight = header.offsetHeight;
-        
-        // Применяем отступ для основного содержимого
-        if (tg) {
-            // Для Telegram учитываем safe-area
-            main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
-            main.style.marginTop = '0';
-        } else {
-            // Для обычного браузера
-            main.style.paddingTop = `${headerHeight}px`;
-            main.style.marginTop = '0';
-        }
-        
-        // Устанавливаем минимальную высоту содержимого
-        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
-        
-        console.log('Layout adjusted:', {
-            headerHeight,
-            paddingTop: main.style.paddingTop,
-            minHeight: main.style.minHeight
-        });
-    }
+    main.style.marginTop = `${headerHeight}px`;
+    main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
+  }
 }
 
 function initCatalog() {
