@@ -289,28 +289,27 @@ function initModal() {
 }
 
 function showSiteDetails(siteId) {
-    console.log('Попытка открыть попап для сайта ID:', siteId); // Для отладки
-    
     const site = sites.find(s => s.id === siteId);
-    if (!site) {
-        console.error('Сайт не найден');
-        return;
-    }
+    if (!site) return;
 
     currentSite = site;
-    
-    // Заполняем попап данными
+
+    // Заполняем модальное окно данными
     document.getElementById('modal-title').textContent = site.title;
     document.getElementById('modal-image').src = site.image;
+    document.getElementById('modal-image').alt = site.title;
     document.getElementById('modal-description').textContent = site.description;
     document.getElementById('modal-price').textContent = site.price;
-    
-    // Показываем попап
-    const modal = document.getElementById('site-modal');
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    
-    console.log('Попап должен быть виден сейчас'); // Для отладки
+    document.getElementById('modal-time').textContent = `Срок разработки: ${site.time}`;
+
+    const categoryClass = getCategoryClass(site.category);
+    const categoryName = getCategoryName(site.category);
+    const categoryElement = document.getElementById('modal-category');
+    categoryElement.textContent = categoryName;
+    categoryElement.className = `px-3 py-1 ${categoryClass} text-sm rounded-full`;
+
+    // Показываем модальное окно
+    document.getElementById('site-modal').classList.remove('hidden');
 
     // Настраиваем кнопку покупки
     const buyButton = document.getElementById('buy-button');
