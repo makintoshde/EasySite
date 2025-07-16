@@ -57,14 +57,18 @@ const sites = [
 
 // Основная функция инициализации
 function initApp() {
+  console.log('Инициализация приложения');
+  
   // 1. Принудительно сбрасываем hash если он есть
   if (window.location.hash) {
     window.history.replaceState({}, '', window.location.pathname);
+    console.log('Сброшен hash URL');
   }
 
   // 2. Настройка viewport для Telegram
   if (tg) {
     setupTelegramViewport();
+    console.log('Telegram WebApp инициализирован');
   }
 
   // 3. Инициализация компонентов
@@ -77,6 +81,7 @@ function initApp() {
   setTimeout(() => {
     adjustLayout();
     forceRedraw();
+    console.log('Приложение полностью загружено');
   }, 50);
 }
 
@@ -90,9 +95,16 @@ function setupTelegramViewport() {
   if (tg.colorScheme === 'dark') {
     document.documentElement.classList.add('dark');
   }
+  
+  // Настройка кнопки "Закрыть"
+  tg.BackButton.setText("Закрыть");
+  tg.BackButton.onClick(() => tg.close());
+  tg.BackButton.hide();
 }
 
 function loadHomePage() {
+  console.log('Загрузка главной страницы');
+  
   // Скрываем все страницы
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
@@ -104,18 +116,16 @@ function loadHomePage() {
   if (homePage) {
     homePage.classList.add('active');
     homePage.style.display = 'block';
+    console.log('Главная страница отображена');
   }
   
   // Обновляем активные ссылки
   updateNavLinks('home');
-  
-  // Telegram BackButton
-  if (tg) {
-    tg.BackButton.hide();
-  }
 }
 
 function initComponents() {
+  console.log('Инициализация компонентов');
+  
   // Бургер-меню
   initBurgerMenu();
 
@@ -123,9 +133,13 @@ function initComponents() {
   initNavigation();
 
   // Кнопка в каталог
-  document.getElementById('go-to-catalog')?.addEventListener('click', () => {
-    navigateTo('catalog');
-  });
+  const catalogBtn = document.getElementById('go-to-catalog');
+  if (catalogBtn) {
+    catalogBtn.addEventListener('click', () => {
+      console.log('Переход в каталог');
+      navigateTo('catalog');
+    });
+  }
 
   // Инициализация каталога
   initCatalog();
@@ -139,41 +153,50 @@ function initBurgerMenu() {
   mobileMenu = document.getElementById('mobile-menu');
   const closeMenu = document.getElementById('close-menu');
 
-  burgerButton?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    mobileMenu.classList.remove('translate-x-full');
-  });
+  if (burgerButton && mobileMenu && closeMenu) {
+    burgerButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mobileMenu.classList.remove('translate-x-full');
+      console.log('Меню открыто');
+    });
 
-  closeMenu?.addEventListener('click', () => {
-    mobileMenu.classList.add('translate-x-full');
-  });
+    closeMenu.addEventListener('click', () => {
+      mobileMenu.classList.add('translate-x-full');
+      console.log('Меню закрыто');
+    });
 
-  document.addEventListener('click', (event) => {
-    if (!mobileMenu.classList.contains('translate-x-full')) {
-      const isClickInside = mobileMenu.contains(event.target) || 
-                          burgerButton.contains(event.target);
-      if (!isClickInside) {
-        mobileMenu.classList.add('translate-x-full');
+    document.addEventListener('click', (event) => {
+      if (!mobileMenu.classList.contains('translate-x-full')) {
+        const isClickInside = mobileMenu.contains(event.target) || 
+                            burgerButton.contains(event.target);
+        if (!isClickInside) {
+          mobileMenu.classList.add('translate-x-full');
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 function initNavigation() {
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const page = link.getAttribute('data-page');
-      if (page === 'home') {
-        loadHomePage();
-      } else {
-        navigateTo(page);
-      }
+  const navLinks = document.querySelectorAll('.nav-link');
+  if (navLinks.length) {
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = link.getAttribute('data-page');
+        console.log(`Навигация на страницу: ${page}`);
+        if (page === 'home') {
+          loadHomePage();
+        } else {
+          navigateTo(page);
+        }
+      });
     });
-  });
+  }
 
   window.addEventListener('popstate', () => {
     const page = window.location.hash.substring(1) || 'home';
+    console.log(`Popstate: переход на страницу ${page}`);
     showPage(page);
   });
 }
@@ -188,6 +211,8 @@ function navigateTo(page) {
 }
 
 function showPage(page) {
+  console.log(`Показ страницы: ${page}`);
+  
   // Скрываем все страницы
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
@@ -208,13 +233,11 @@ function showPage(page) {
   updateNavLinks(page);
   adjustLayout();
 
-  // Telegram BackButton
+  // Управление кнопкой "Закрыть" в Telegram
   if (tg) {
     if (page === 'home') {
       tg.BackButton.hide();
     } else {
-      tg.BackButton.setText("Закрыть");
-      tg.BackButton.onClick(() => tg.close());
       tg.BackButton.show();
     }
   }
@@ -222,7 +245,7 @@ function showPage(page) {
 
 function updateNavLinks(activePage) {
   document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.dataset.page === activePage) {
+    if (link.getAttribute('data-page') === activePage) {
       link.classList.add('active');
     } else {
       link.classList.remove('active');
@@ -252,14 +275,19 @@ function forceRedraw() {
   body.style.display = 'none';
   body.offsetHeight;
   body.style.display = '';
+  console.log('Принудительная перерисовка выполнена');
 }
 
 function initCatalog() {
   renderSites(sites);
   
-  document.getElementById('category-filter')?.addEventListener('change', filterSites);
-  document.getElementById('theme-filter')?.addEventListener('change', filterSites);
-  document.getElementById('search-input')?.addEventListener('input', filterSites);
+  const categoryFilter = document.getElementById('category-filter');
+  const themeFilter = document.getElementById('theme-filter');
+  const searchInput = document.getElementById('search-input');
+  
+  if (categoryFilter) categoryFilter.addEventListener('change', filterSites);
+  if (themeFilter) themeFilter.addEventListener('change', filterSites);
+  if (searchInput) searchInput.addEventListener('input', filterSites);
 }
 
 function renderSites(sitesToRender) {
@@ -330,6 +358,14 @@ function filterSites() {
   }
   
   renderSites(filteredSites);
+}
+
+function initModal() {
+  const closeModalBtn = document.getElementById('close-modal');
+  const buyButton = document.getElementById('buy-button');
+  
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+  if (buyButton) buyButton.addEventListener('click', handleBuyButtonClick);
 }
 
 function showSiteDetails(siteId) {
@@ -413,5 +449,6 @@ function getCategoryName(category) {
   return names[category] || 'Другое';
 }
 
+// Запуск приложения
 document.addEventListener('DOMContentLoaded', initApp);
 window.addEventListener('resize', adjustLayout);
