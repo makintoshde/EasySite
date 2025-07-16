@@ -52,6 +52,8 @@ const sites = [
 
 // Основная функция инициализации
 function initApp() {
+    console.log('Initializing app...');
+    
     // Инициализация Telegram WebApp
     if (tg) {
         tg.ready();
@@ -60,20 +62,23 @@ function initApp() {
         tg.BackButton.hide();
         
         if (tg.colorScheme === 'dark') {
-        document.documentElement.classList.add('dark');
+            document.documentElement.classList.add('dark');
         }
     }
 
-    // Устанавливаем отступы сразу
+    // Принудительно устанавливаем отступы до инициализации компонентов
     adjustLayout();
     
-    // Инициализация остальных компонентов
-    initComponents();
+    // Инициализация компонентов
+    initBurgerMenu();
+    initNavigation();
+    initCatalog();
+    initModal();
     
-    // Показываем главную страницу
+    // Принудительно показываем главную страницу
     showPage('home');
     
-    // Повторная проверка после загрузки
+    // Повторная корректировка макета после загрузки
     setTimeout(adjustLayout, 100);
 }
 
@@ -120,6 +125,7 @@ function initNavigation() {
         const page = window.location.hash.substring(1) || 'home';
         showPage(page);
     });
+    
     // Обновляем отступы при изменении размера окна
     window.addEventListener('resize', () => {
         setTimeout(adjustLayout, 100);
@@ -184,21 +190,30 @@ function adjustLayout() {
     const header = document.querySelector('header');
     const main = document.querySelector('main');
     
-    if (!header || !main) return;
-    
-    // Для отладки
-    console.log('Header height:', header.offsetHeight);
-    console.log('Current main marginTop:', main.style.marginTop);
-    
-    // Применяем отступ
-    if (tg) {
-        main.style.marginTop = `calc(6rem + env(safe-area-inset-top))`;
-    } else {
-        main.style.marginTop = '6rem';
+    if (header && main) {
+        // Получаем полную высоту шапки с учетом padding
+        const headerHeight = header.offsetHeight;
+        
+        // Применяем отступ для основного содержимого
+        if (tg) {
+            // Для Telegram учитываем safe-area
+            main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
+            main.style.marginTop = '0';
+        } else {
+            // Для обычного браузера
+            main.style.paddingTop = `${headerHeight}px`;
+            main.style.marginTop = '0';
+        }
+        
+        // Устанавливаем минимальную высоту содержимого
+        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
+        
+        console.log('Layout adjusted:', {
+            headerHeight,
+            paddingTop: main.style.paddingTop,
+            minHeight: main.style.minHeight
+        });
     }
-    
-    // Принудительный рефлоу для применения стилей
-    void main.offsetHeight;
 }
 
 function initCatalog() {
