@@ -125,7 +125,7 @@ function initNavigation() {
         const page = window.location.hash.substring(1) || 'home';
         showPage(page);
     });
-    
+
     // Обновляем отступы при изменении размера окна
     window.addEventListener('resize', () => {
         setTimeout(adjustLayout, 100);
@@ -186,35 +186,35 @@ function updateNavLinks(activePage) {
     });
 }
 
-function adjustLayout() {
-    const header = document.querySelector('header');
-    const main = document.querySelector('main');
+// function adjustLayout() {
+//     const header = document.querySelector('header');
+//     const main = document.querySelector('main');
     
-    if (header && main) {
-        // Получаем полную высоту шапки с учетом padding
-        const headerHeight = header.offsetHeight;
+//     if (header && main) {
+//         // Получаем полную высоту шапки с учетом padding
+//         const headerHeight = header.offsetHeight;
         
-        // Применяем отступ для основного содержимого
-        if (tg) {
-            // Для Telegram учитываем safe-area
-            main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
-            main.style.marginTop = '0';
-        } else {
-            // Для обычного браузера
-            main.style.paddingTop = `${headerHeight}px`;
-            main.style.marginTop = '0';
-        }
+//         // Применяем отступ для основного содержимого
+//         if (tg) {
+//             // Для Telegram учитываем safe-area
+//             main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
+//             main.style.marginTop = '0';
+//         } else {
+//             // Для обычного браузера
+//             main.style.paddingTop = `${headerHeight}px`;
+//             main.style.marginTop = '0';
+//         }
         
-        // Устанавливаем минимальную высоту содержимого
-        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
+//         // Устанавливаем минимальную высоту содержимого
+//         main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
         
-        console.log('Layout adjusted:', {
-            headerHeight,
-            paddingTop: main.style.paddingTop,
-            minHeight: main.style.minHeight
-        });
-    }
-}
+//         console.log('Layout adjusted:', {
+//             headerHeight,
+//             paddingTop: main.style.paddingTop,
+//             minHeight: main.style.minHeight
+//         });
+//     }
+// }
 
 function initCatalog() {
     renderSites(sites);
