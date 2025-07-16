@@ -1,4 +1,11 @@
-console.log('Script loaded');
+// Инициализация Telegram WebApp
+let tg = null;
+if (window.Telegram && window.Telegram.WebApp) {
+    tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand(); // Раскрываем на весь экран
+    tg.enableClosingConfirmation(); // Подтверждение закрытия
+}
 
 // Данные о сайтах
 const sites = [
@@ -48,7 +55,6 @@ const sites = [
 // Глобальные переменные
 let mobileMenu = null;
 let currentSite = null;
-let tg = null;
 
 // Вспомогательные функции
 function getCategoryClass(category) {
@@ -69,6 +75,33 @@ function getCategoryName(category) {
         blog: 'Блог'
     };
     return names[category] || 'Другое';
+}
+
+// Адаптация под Telegram WebApp
+function adjustForTelegram() {
+    if (!tg) return;
+    
+    // Установка темы
+    if (tg.colorScheme === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
+    
+    // Корректировка отступов
+    const header = document.querySelector('header');
+    const main = document.querySelector('main');
+    
+    if (header && main) {
+        const headerHeight = header.offsetHeight;
+        main.style.paddingTop = `${headerHeight + 20}px`;
+        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
+    }
+    
+    // Инициализация кнопки "Назад"
+    tg.BackButton.show();
+    tg.BackButton.onClick(() => {
+        navigateTo('home');
+        tg.BackButton.hide();
+    });
 }
 
 // Инициализация бургер-меню
@@ -281,7 +314,7 @@ function showSiteDetails(siteId) {
         buyButton.textContent = "Посмотреть сайт";
         buyButton.onclick = function() {
             if (site.url) {
-                window.open(site.url, '_blank');
+                tg ? tg.openLink(site.url) : window.open(site.url, '_blank');
             } else {
                 alert("Ссылка на сайт не указана.");
             }
@@ -289,7 +322,13 @@ function showSiteDetails(siteId) {
     }
 
     if (tg) {
-        tg.MainButton.hide();
+        tg.MainButton.setText("Купить сайт");
+        tg.MainButton.onClick(() => {
+            if (site.url) {
+                tg.openLink(site.url);
+            }
+        });
+        tg.MainButton.show();
     }
 }
 
@@ -297,7 +336,7 @@ function showSiteDetails(siteId) {
 function handleBuyButtonClick() {
     if (currentSite) {
         if (currentSite.url) {
-            window.open(currentSite.url, '_blank');
+            tg ? tg.openLink(currentSite.url) : window.open(currentSite.url, '_blank');
         } else {
             alert("Ссылка на сайт не указана.");
         }
@@ -314,38 +353,13 @@ function closeModal() {
     currentSite = null;
 }
 
-// Инициализация Telegram-специфичных функций
-function initTelegramFeatures() {
-    if (!tg) return;
-    
-    tg.BackButton.show();
-    tg.BackButton.onClick(() => {
-        navigateTo('home');
-        tg.BackButton.hide();
-    });
-    
-    tg.MainButton.setText("Купить выбранный сайт");
-    tg.MainButton.hide();
-}
-
-// Основная функция инициализации приложения
+// Инициализация приложения
 function initApp() {
-    // Инициализация Telegram WebApp
-    if (window.Telegram && window.Telegram.WebApp) {
-        tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        
-        if (tg.colorScheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        }
-    }
-
+    adjustForTelegram();
     initBurgerMenu();
     initNavigation();
     initCatalog();
     initModal();
-    initTelegramFeatures();
     
     const initialPage = window.location.hash.substring(1) || 'home';
     showPage(initialPage);
