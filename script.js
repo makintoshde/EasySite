@@ -222,10 +222,13 @@ function renderSites(sitesToRender) {
 
         // Добавляем видео-превью
         const videoHTML = `
-        <video autoplay loop muted playsinline class="w-full h-48 object-cover">
-            <source src="media-intro/${site.video}" type="video/webm">
-            <source src="media-intro/${site.video.replace('.webm', '.mp4')}" type="video/mp4">
-        </video>
+        <div class="video-container relative w-full h-48 overflow-hidden">
+            <video autoplay loop muted playsinline class="absolute w-full h-full object-cover pointer-events-none">
+                <source src="media-intro/${site.video}" type="video/webm">
+                <source src="media-intro/${site.video.replace('.webm', '.mp4')}" type="video/mp4">
+            </video>
+            <div class="absolute inset-0 z-10"></div>
+        </div>
         `;
 
         card.innerHTML = `
@@ -257,37 +260,38 @@ function renderSites(sitesToRender) {
 }
 
 function attachDetailsHandlers() {
-  document.querySelectorAll('.view-details-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const siteId = parseInt(this.getAttribute('data-id'));
-      showSiteDetails(siteId);
+    document.querySelectorAll('.view-details-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+        e.stopPropagation(); // Предотвращаем всплытие
+        const siteId = parseInt(this.getAttribute('data-id'));
+        showSiteDetails(siteId);
+        });
     });
-  });
 }
 
 // Ленивая загрузка
 function initLazyVideo() {
-  const lazyVideos = document.querySelectorAll('.lazy-video');
-  
-  const lazyVideoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const video = entry.target;
-        const sources = video.querySelectorAll('source');
-        
-        sources.forEach(source => {
-          source.src = source.dataset.src;
+    const lazyVideos = document.querySelectorAll('.lazy-video');
+    
+    const lazyVideoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const video = entry.target;
+            const sources = video.querySelectorAll('source');
+            
+            sources.forEach(source => {
+            source.src = source.dataset.src;
+            });
+            
+            video.load();
+            lazyVideoObserver.unobserve(video);
+        }
         });
-        
-        video.load();
-        lazyVideoObserver.unobserve(video);
-      }
     });
-  });
 
-  lazyVideos.forEach(video => {
-    lazyVideoObserver.observe(video);
-  });
+    lazyVideos.forEach(video => {
+        lazyVideoObserver.observe(video);
+    });
 }
 
 function filterSites() {
