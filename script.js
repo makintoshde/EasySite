@@ -9,7 +9,6 @@ if (tg) {
 // Глобальные переменные
 let mobileMenu = null;
 let currentSite = null;
-let isFirstLoad = true;
 
 // Данные о сайтах
 const sites = [
@@ -58,23 +57,27 @@ const sites = [
 
 // Основная функция инициализации
 function initApp() {
-  // Настройка viewport для Telegram
+  // 1. Принудительно сбрасываем hash если он есть
+  if (window.location.hash) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  // 2. Настройка viewport для Telegram
   if (tg) {
     setupTelegramViewport();
   }
 
-  // Инициализация компонентов
+  // 3. Инициализация компонентов
   initComponents();
   
-  // Первоначальная загрузка страницы
-  loadInitialPage();
+  // 4. Явная загрузка главной страницы
+  loadHomePage();
   
-  // После полной загрузки
+  // 5. Корректировка макета после отрисовки
   setTimeout(() => {
-    isFirstLoad = false;
     adjustLayout();
-    forceRedraw(); // Принудительное обновление отображения
-  }, 100);
+    forceRedraw();
+  }, 50);
 }
 
 function setupTelegramViewport() {
@@ -86,6 +89,29 @@ function setupTelegramViewport() {
   // Применение темной темы
   if (tg.colorScheme === 'dark') {
     document.documentElement.classList.add('dark');
+  }
+}
+
+function loadHomePage() {
+  // Скрываем все страницы
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  
+  // Показываем главную страницу
+  const homePage = document.getElementById('home');
+  if (homePage) {
+    homePage.classList.add('active');
+    homePage.style.display = 'block';
+  }
+  
+  // Обновляем активные ссылки
+  updateNavLinks('home');
+  
+  // Telegram BackButton
+  if (tg) {
+    tg.BackButton.hide();
   }
 }
 
@@ -137,7 +163,12 @@ function initNavigation() {
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      navigateTo(link.dataset.page);
+      const page = link.getAttribute('data-page');
+      if (page === 'home') {
+        loadHomePage();
+      } else {
+        navigateTo(page);
+      }
     });
   });
 
@@ -145,24 +176,6 @@ function initNavigation() {
     const page = window.location.hash.substring(1) || 'home';
     showPage(page);
   });
-}
-
-function initCatalog() {
-  renderSites(sites);
-  
-  document.getElementById('category-filter')?.addEventListener('change', filterSites);
-  document.getElementById('theme-filter')?.addEventListener('change', filterSites);
-  document.getElementById('search-input')?.addEventListener('input', filterSites);
-}
-
-function initModal() {
-  document.getElementById('close-modal')?.addEventListener('click', closeModal);
-  document.getElementById('buy-button')?.addEventListener('click', handleBuyButtonClick);
-}
-
-function loadInitialPage() {
-  const page = window.location.hash.substring(1) || 'home';
-  showPage(page, true);
 }
 
 function navigateTo(page) {
@@ -174,16 +187,18 @@ function navigateTo(page) {
   showPage(page);
 }
 
-function showPage(page, initialLoad = false) {
+function showPage(page) {
   // Скрываем все страницы
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
+    p.style.display = 'none';
   });
 
   // Показываем выбранную
   const pageElement = document.getElementById(page);
   if (pageElement) {
     pageElement.classList.add('active');
+    pageElement.style.display = 'block';
     
     if (page === 'catalog') {
       filterSites();
@@ -191,18 +206,16 @@ function showPage(page, initialLoad = false) {
   }
 
   updateNavLinks(page);
-
-  if (!initialLoad) {
-    adjustLayout();
-  }
+  adjustLayout();
 
   // Telegram BackButton
   if (tg) {
     if (page === 'home') {
       tg.BackButton.hide();
     } else {
+      tg.BackButton.setText("Закрыть");
+      tg.BackButton.onClick(() => tg.close());
       tg.BackButton.show();
-      tg.BackButton.onClick(() => navigateTo('home'));
     }
   }
 }
@@ -235,11 +248,18 @@ function adjustLayout() {
 }
 
 function forceRedraw() {
-  // Принудительный рефлоу для применения стилей
   const body = document.body;
   body.style.display = 'none';
-  body.offsetHeight; // Триггер рефлоу
+  body.offsetHeight;
   body.style.display = '';
+}
+
+function initCatalog() {
+  renderSites(sites);
+  
+  document.getElementById('category-filter')?.addEventListener('change', filterSites);
+  document.getElementById('theme-filter')?.addEventListener('change', filterSites);
+  document.getElementById('search-input')?.addEventListener('input', filterSites);
 }
 
 function renderSites(sitesToRender) {
@@ -393,6 +413,5 @@ function getCategoryName(category) {
   return names[category] || 'Другое';
 }
 
-// Запуск приложения
 document.addEventListener('DOMContentLoaded', initApp);
 window.addEventListener('resize', adjustLayout);
