@@ -135,13 +135,6 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        #site-content-page {
-            transition: opacity 0.3s ease;
-        }
-        #site-content-page:not(.hidden) {
-            display: block;
-        }
         
         /* Адаптация под Telegram WebApp */
         .tg-header {
@@ -316,7 +309,7 @@
                 </div>
             </div>
             
-            <div id="sites-container" class="sites-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="sites-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Карточки сайтов будут добавлены через JavaScript -->
             </div>
         </div>
@@ -402,15 +395,6 @@
                     Посмотреть сайт
                 </button>
             </div>
-        </div>
-    </div>
-
-    <div id="site-content-page" class="hidden fixed inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto">
-        <div class="container mx-auto px-4 py-20">
-            <button id="back-button" class="fixed top-4 left-4 bg-gray-200 dark:bg-gray-700 p-2 rounded-full">
-                ← Назад
-            </button>
-            <div id="site-content-container"></div>
         </div>
     </div>
 
