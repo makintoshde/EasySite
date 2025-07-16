@@ -181,22 +181,19 @@ function showPage(page) {
     }
 }
 
-function handleBuyButtonClick() {
-    if (!currentSite?.url) {
-        alert("Ссылка на сайт не указана.");
-        return;
+function handleBackButton(currentPage) {
+    switch(currentPage) {
+        case 'catalog':
+            showPage('home');
+            break;
+        case 'about':
+        case 'site-preview': // Добавьте эту страницу для предпросмотра сайтов
+            showPage('catalog');
+            break;
+        default:
+            // Для всех остальных страниц возвращаем в каталог
+            showPage('catalog');
     }
-
-    // Для мини-приложения открываем в iframe
-    if (window.Telegram?.WebApp) {
-        openSitePreview(currentSite.url);
-    } 
-    // Для обычного сайта открываем в новом окне
-    else {
-        window.open(currentSite.url, '_blank');
-    }
-    
-    closeModal();
 }
 
 function updateNavLinks(activePage) {
@@ -338,72 +335,52 @@ function showSiteDetails(siteId) {
     const buyButton = document.getElementById('buy-button');
     if (buyButton) {
         buyButton.textContent = "Посмотреть сайт";
-        buyButton.onclick = function(e) {
-            e.preventDefault();
-            handleBuyButtonClick(); // Используем единый обработчик
+        buyButton.onclick = function() {
+            if (site.url) {
+                // Создаем временную страницу для предпросмотра
+                createPreviewPage(site);
+                showPage('site-preview');
+            } else {
+                alert("Ссылка на сайт не указана.");
+            }
         };
     }
 }
 
-function openSitePreview(url) {
-    // Проверяем, что URL существует
-    if (!url) {
-        alert("Ошибка: URL сайта не указан");
-        return;
-    }
-
-    // Создаем контейнер для превью
+function createPreviewPage(site) {
+    // Создаем контейнер для предпросмотра, если его нет
     let previewContainer = document.getElementById('site-preview');
-    
     if (!previewContainer) {
         previewContainer = document.createElement('div');
         previewContainer.id = 'site-preview';
-        previewContainer.className = 'fixed inset-0 bg-white dark:bg-gray-900 z-50 overflow-hidden';
-        
-        // Кнопка "Назад"
-        const closeButton = document.createElement('button');
-        closeButton.id = 'close-preview';
-        closeButton.className = 'absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-gray-800/80 rounded-full shadow-md';
-        closeButton.innerHTML = '← Назад';
-        
-        // Iframe для контента
-        const iframe = document.createElement('iframe');
-        iframe.src = url;
-        iframe.className = 'w-full h-full border-0';
-        iframe.setAttribute('allow', 'fullscreen');
-        
-        // Собираем структуру
-        previewContainer.appendChild(closeButton);
-        previewContainer.appendChild(iframe);
-        document.body.appendChild(previewContainer);
-        
-        // Обработчик кнопки
-        closeButton.addEventListener('click', () => {
-            previewContainer.remove();
-            if (tg) {
-                tg.BackButton.hide();
-            }
-        });
+        previewContainer.className = 'page';
+        document.querySelector('main').appendChild(previewContainer);
     }
     
-    // Настройка кнопки "Назад" в Telegram
-    if (tg) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => {
-            const preview = document.getElementById('site-preview');
-            if (preview) preview.remove();
-            tg.BackButton.hide();
-        });
-    }
+    // Заполняем контент
+    previewContainer.innerHTML = `
+        <div class="p-4">
+            <h2 class="text-2xl font-bold mb-4">${site.title}</h2>
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                <iframe src="${site.url}" class="w-full h-96 border-0"></iframe>
+            </div>
+            <p class="mt-4">${site.description}</p>
+        </div>
+    `;
 }
 
 function handleBuyButtonClick() {
-    if (!currentSite?.url) {
+    if (currentSite?.url) {
+        if (window.Telegram?.WebApp?.openLink) {
+            Telegram.WebApp.openLink(currentSite.url, {
+                try_instant_view: true
+            });
+        } else {
+            window.open(currentSite.url, '_blank', 'noopener,noreferrer');
+        }
+    } else {
         alert("Ссылка на сайт не указана.");
-        return;
     }
-
-    openSitePreview(currentSite.url);
     closeModal();
 }
 
