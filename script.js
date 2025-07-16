@@ -26,8 +26,7 @@ const sites = [
         category: "portfolio",
         theme: "light",
         image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-        time: "2-3 дня",
-        url: "./sites/svai/index.html"
+        time: "2-3 дня"
     },
     {
         id: 3,
@@ -53,8 +52,6 @@ const sites = [
 
 // Основная функция инициализации
 function initApp() {
-    console.log('Initializing app...');
-    
     // Инициализация Telegram WebApp
     if (tg) {
         tg.ready();
@@ -63,23 +60,20 @@ function initApp() {
         tg.BackButton.hide();
         
         if (tg.colorScheme === 'dark') {
-            document.documentElement.classList.add('dark');
+        document.documentElement.classList.add('dark');
         }
     }
 
-    // Принудительно устанавливаем отступы до инициализации компонентов
+    // Устанавливаем отступы сразу
     adjustLayout();
-
-    // Инициализация компонентов
-    initBurgerMenu();
-    initNavigation();
-    initCatalog();
-    initModal();
     
-    // Принудительно показываем главную страницу
+    // Инициализация остальных компонентов
+    initComponents();
+    
+    // Показываем главную страницу
     showPage('home');
     
-    // Повторная корректировка макета после загрузки
+    // Повторная проверка после загрузки
     setTimeout(adjustLayout, 100);
 }
 
@@ -190,30 +184,21 @@ function adjustLayout() {
     const header = document.querySelector('header');
     const main = document.querySelector('main');
     
-    if (header && main) {
-        // Получаем полную высоту шапки с учетом padding
-        const headerHeight = header.offsetHeight;
-        
-        // Применяем отступ для основного содержимого
-        if (tg) {
-            // Для Telegram учитываем safe-area
-            main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
-            main.style.marginTop = '0';
-        } else {
-            // Для обычного браузера
-            main.style.paddingTop = `${headerHeight}px`;
-            main.style.marginTop = '0';
-        }
-        
-        // Устанавливаем минимальную высоту содержимого
-        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
-        
-        console.log('Layout adjusted:', {
-            headerHeight,
-            paddingTop: main.style.paddingTop,
-            minHeight: main.style.minHeight
-        });
+    if (!header || !main) return;
+    
+    // Для отладки
+    console.log('Header height:', header.offsetHeight);
+    console.log('Current main marginTop:', main.style.marginTop);
+    
+    // Применяем отступ
+    if (tg) {
+        main.style.marginTop = `calc(6rem + env(safe-area-inset-top))`;
+    } else {
+        main.style.marginTop = '6rem';
     }
+    
+    // Принудительный рефлоу для применения стилей
+    void main.offsetHeight;
 }
 
 function initCatalog() {
