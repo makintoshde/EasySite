@@ -10,6 +10,7 @@ const sites = [
     {
         id: 1,
         title: "Лендинг для бизнеса",
+        video: "svai.webm",
         description: "Современный одностраничный сайт для презентации вашего бизнеса или услуги. Адаптивный дизайн, форма заявки, галерея работ.",
         price: "123 руб.",
         category: "landing",
@@ -80,6 +81,8 @@ function initApp() {
     
     // Повторная корректировка макета после загрузки
     setTimeout(adjustLayout, 100);
+
+    initLazyVideo();
 }
 
 function initBurgerMenu() {
@@ -211,51 +214,80 @@ function initCatalog() {
 
 function renderSites(sitesToRender) {
     const container = document.getElementById('sites-container');
-    if (!container) {
-        console.error('Sites container not found');
-        return;
-    }
-    
     container.innerHTML = '';
-    
-    if (!sitesToRender || sitesToRender.length === 0) {
-        container.innerHTML = '<p class="text-center py-4 text-gray-500">Нет доступных сайтов</p>';
-        return;
-    }
-    
+
     sitesToRender.forEach(site => {
-        const categoryClass = getCategoryClass(site.category);
-        const categoryName = getCategoryName(site.category);
-        
         const card = document.createElement('div');
         card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden';
-        card.innerHTML = `
-            <img src="${site.image}" alt="${site.title}" class="w-full h-48 object-cover">
-            <div class="p-4">
-                <div class="flex items-start justify-between mb-2">
-                    <h3 class="font-bold text-lg">${site.title}</h3>
-                    <span class="px-2 py-1 ${categoryClass} text-xs rounded-full">${categoryName}</span>
-                </div>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">${site.description}</p>
-                <div class="flex items-center justify-between">
-                    <span class="font-bold">${site.price}</span>
-                    <button class="view-details-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition" data-id="${site.id}">
-                        Подробнее
-                    </button>
-                </div>
-            </div>
+
+        // Добавляем видео-превью
+        const videoHTML = `
+        <video autoplay loop muted playsinline class="w-full h-48 object-cover">
+            <source src="media-intro/${site.video}" type="video/webm">
+            <source src="media-intro/${site.video.replace('.webm', '.mp4')}" type="video/mp4">
+        </video>
         `;
-        
+
+        card.innerHTML = `
+        ${site.video ? videoHTML : '<div class="h-48 bg-gray-100 dark:bg-gray-700"></div>'}
+        <div class="p-4">
+            <div class="flex items-start justify-between mb-2">
+                <h3 class="font-bold text-lg">${site.title}</h3>
+                <span class="px-2 py-1 ${getCategoryClass(site.category)} text-xs rounded-full">
+                    ${getCategoryName(site.category)}
+                </span>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                ${site.description}
+            </p>
+            <div class="flex items-center justify-between">
+                <span class="font-bold">${site.price}</span>
+                <button class="view-details-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm" data-id="${site.id}">
+                    Подробнее
+                </button>
+            </div>
+        </div>
+        `;
+
         container.appendChild(card);
     });
-    
+
     // Добавляем обработчики для кнопок "Подробнее"
-    document.querySelectorAll('.view-details-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const siteId = parseInt(this.getAttribute('data-id'));
-            showSiteDetails(siteId);
-        });
+    attachDetailsHandlers();
+}
+
+function attachDetailsHandlers() {
+  document.querySelectorAll('.view-details-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const siteId = parseInt(this.getAttribute('data-id'));
+      showSiteDetails(siteId);
     });
+  });
+}
+
+// Ленивая загрузка
+function initLazyVideo() {
+  const lazyVideos = document.querySelectorAll('.lazy-video');
+  
+  const lazyVideoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const video = entry.target;
+        const sources = video.querySelectorAll('source');
+        
+        sources.forEach(source => {
+          source.src = source.dataset.src;
+        });
+        
+        video.load();
+        lazyVideoObserver.unobserve(video);
+      }
+    });
+  });
+
+  lazyVideos.forEach(video => {
+    lazyVideoObserver.observe(video);
+  });
 }
 
 function filterSites() {
