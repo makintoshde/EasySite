@@ -135,6 +135,19 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .video-container {
+            position: relative;
+        }
+
+        .video-container video {
+            z-index: 1;
+        }
+
+        .video-container > div {
+            z-index: 2;
+            pointer-events: auto; /* Разрешаем клики */
+        }
         
         /* Адаптация под Telegram WebApp */
         .tg-header {
