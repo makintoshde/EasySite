@@ -59,6 +59,13 @@ function initApp() {
         tg.ready();
         tg.expand();
         tg.enableClosingConfirmation();
+        tg.BackButton.hide();
+        
+        // Устанавливаем обработчик для кнопки Назад
+        tg.BackButton.onClick(() => {
+            const currentPage = window.location.hash.substring(1) || 'home';
+            handleBackButton(currentPage);
+        });
         
         if (tg.colorScheme === 'dark') {
             document.documentElement.classList.add('dark');
@@ -154,7 +161,6 @@ function showPage(page) {
     if (pageElement) {
         pageElement.classList.add('active');
         
-        // Особые действия для каталога
         if (page === 'catalog') {
             filterSites();
         }
@@ -168,10 +174,25 @@ function showPage(page) {
         if (page === 'home') {
             tg.BackButton.hide();
         } else {
-            tg.BackButton.setText("Закрыть");
-            tg.BackButton.onClick(() => tg.close());
+            tg.BackButton.setText("Назад");
+            tg.BackButton.onClick(() => handleBackButton(page));
             tg.BackButton.show();
         }
+    }
+}
+
+function handleBackButton(currentPage) {
+    switch(currentPage) {
+        case 'catalog':
+            showPage('home');
+            break;
+        case 'about':
+        case 'site-preview': // Добавьте эту страницу для предпросмотра сайтов
+            showPage('catalog');
+            break;
+        default:
+            // Для всех остальных страниц возвращаем в каталог
+            showPage('catalog');
     }
 }
 
@@ -316,20 +337,36 @@ function showSiteDetails(siteId) {
         buyButton.textContent = "Посмотреть сайт";
         buyButton.onclick = function() {
             if (site.url) {
-                if (window.Telegram?.WebApp?.openLink) {
-                    // Открываем внутри Telegram WebApp
-                    Telegram.WebApp.openLink(site.url, {
-                        try_instant_view: true // Пробуем открыть как Instant View
-                    });
-                } else {
-                    // Фолбэк для обычного браузера
-                    window.open(site.url, '_blank', 'noopener,noreferrer');
-                }
+                // Создаем временную страницу для предпросмотра
+                createPreviewPage(site);
+                showPage('site-preview');
             } else {
                 alert("Ссылка на сайт не указана.");
             }
         };
     }
+}
+
+function createPreviewPage(site) {
+    // Создаем контейнер для предпросмотра, если его нет
+    let previewContainer = document.getElementById('site-preview');
+    if (!previewContainer) {
+        previewContainer = document.createElement('div');
+        previewContainer.id = 'site-preview';
+        previewContainer.className = 'page';
+        document.querySelector('main').appendChild(previewContainer);
+    }
+    
+    // Заполняем контент
+    previewContainer.innerHTML = `
+        <div class="p-4">
+            <h2 class="text-2xl font-bold mb-4">${site.title}</h2>
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                <iframe src="${site.url}" class="w-full h-96 border-0"></iframe>
+            </div>
+            <p class="mt-4">${site.description}</p>
+        </div>
+    `;
 }
 
 function handleBuyButtonClick() {
