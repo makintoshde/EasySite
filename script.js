@@ -16,6 +16,13 @@ const sites = [
         theme: "light",
         image: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
         time: "1-2 дня",
+        content: `
+            <div class="p-4">
+                <h2 class="text-2xl font-bold mb-4">Лендинг для бизнеса</h2>
+                <img src="https://images.unsplash.com/photo-1551434678-e076c223a692" class="w-full mb-4 rounded-lg">
+                <p>Современный одностраничный сайт для презентации вашего бизнеса</p>
+            </div>
+        `,
         url: "./sites/svai/index.html"
     },
     {
@@ -302,6 +309,15 @@ function showSiteDetails(siteId) {
     document.getElementById('modal-price').textContent = site.price;
     document.getElementById('modal-time').textContent = `Срок разработки: ${site.time}`;
 
+    // Заполняем контейнер контентом
+    document.getElementById('site-content-container').innerHTML = site.content;
+    
+    // Показываем страницу с контентом
+    document.getElementById('site-content-page').classList.remove('hidden');
+    
+    // Скрываем основной контент
+    document.querySelector('main').classList.add('hidden');
+
     const categoryClass = getCategoryClass(site.category);
     const categoryName = getCategoryName(site.category);
     const categoryElement = document.getElementById('modal-category');
@@ -316,22 +332,23 @@ function showSiteDetails(siteId) {
     if (buyButton) {
         buyButton.textContent = "Посмотреть сайт";
         buyButton.onclick = function() {
-            if (site.url) {
-                if (window.Telegram?.WebApp?.openLink) {
-                    // Открываем внутри Telegram WebApp
-                    Telegram.WebApp.openLink(site.url, {
-                        try_instant_view: true // Пробуем открыть как Instant View
-                    });
-                } else {
-                    // Фолбэк для обычного браузера
-                    window.open(site.url, '_blank', 'noopener,noreferrer');
-                }
+            if (site.content) {
+                showSiteDetails(site.id);
+            } else if (site.url) {
+                // Фолбэк на внешнюю ссылку, если нет контента
+                tg?.openLink(site.url) || window.open(site.url, '_blank');
             } else {
-                alert("Ссылка на сайт не указана.");
+                alert("Контент недоступен");
             }
         };
     }
 }
+
+// Обработчик кнопки "Назад"
+document.getElementById('back-button').addEventListener('click', function() {
+    document.getElementById('site-content-page').classList.add('hidden');
+    document.querySelector('main').classList.remove('hidden');
+});
 
 function handleBuyButtonClick() {
     if (currentSite?.url) {
