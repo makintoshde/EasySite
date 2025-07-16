@@ -81,8 +81,6 @@ function initApp() {
     
     // Повторная корректировка макета после загрузки
     setTimeout(adjustLayout, 100);
-
-    initLazyVideo();
 }
 
 function initBurgerMenu() {
@@ -218,80 +216,65 @@ function renderSites(sitesToRender) {
 
     sitesToRender.forEach(site => {
         const card = document.createElement('div');
-        card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden';
-
-        // Добавляем видео-превью
-        const videoHTML = `
-        <div class="video-container relative w-full h-48 overflow-hidden">
-            <video autoplay loop muted playsinline class="absolute w-full h-full object-cover pointer-events-none">
-                <source src="media-intro/${site.video}" type="video/webm">
-                <source src="media-intro/${site.video.replace('.webm', '.mp4')}" type="video/mp4">
-            </video>
-            <div class="absolute inset-0 z-10"></div>
-        </div>
-        `;
+        card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden relative'; // Добавили relative
+        
+        // Видео с отключенными pointer-events
+        const videoHTML = site.video ? `
+            <div class="video-wrapper h-48 overflow-hidden">
+                <video autoplay loop muted playsinline class="w-full h-full object-cover pointer-events-none">
+                    <source src="media-intro/${site.video}" type="video/webm">
+                    <source src="media-intro/${site.video.replace('.webm', '.mp4')}" type="video/mp4">
+                </video>
+            </div>
+        ` : '<div class="h-48 bg-gray-100 dark:bg-gray-700"></div>';
 
         card.innerHTML = `
-        ${site.video ? videoHTML : '<div class="h-48 bg-gray-100 dark:bg-gray-700"></div>'}
-        <div class="p-4">
-            <div class="flex items-start justify-between mb-2">
-                <h3 class="font-bold text-lg">${site.title}</h3>
-                <span class="px-2 py-1 ${getCategoryClass(site.category)} text-xs rounded-full">
-                    ${getCategoryName(site.category)}
-                </span>
+            ${videoHTML}
+            <div class="p-4">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-bold text-lg">${site.title}</h3>
+                    <span class="px-2 py-1 ${getCategoryClass(site.category)} text-xs rounded-full">
+                        ${getCategoryName(site.category)}
+                    </span>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                    ${site.description}
+                </p>
+                <div class="flex items-center justify-between">
+                    <span class="font-bold">${site.price}</span>
+                    <button class="view-details-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition" 
+                            data-id="${site.id}">
+                        Подробнее
+                    </button>
+                </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                ${site.description}
-            </p>
-            <div class="flex items-center justify-between">
-                <span class="font-bold">${site.price}</span>
-                <button class="view-details-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm" data-id="${site.id}">
-                    Подробнее
-                </button>
-            </div>
-        </div>
         `;
 
         container.appendChild(card);
     });
 
-    // Добавляем обработчики для кнопок "Подробнее"
-    attachDetailsHandlers();
+    // Назначаем обработчики через делегирование событий
+    setupEventDelegation();
+}
+
+function setupEventDelegation() {
+    document.getElementById('sites-container').addEventListener('click', function(e) {
+        const btn = e.target.closest('.view-details-btn');
+        if (btn) {
+            e.preventDefault();
+            const siteId = parseInt(btn.getAttribute('data-id'));
+            showSiteDetails(siteId);
+        }
+    });
 }
 
 function attachDetailsHandlers() {
-    document.querySelectorAll('.view-details-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-        e.stopPropagation(); // Предотвращаем всплытие
-        const siteId = parseInt(this.getAttribute('data-id'));
-        showSiteDetails(siteId);
-        });
+  document.querySelectorAll('.view-details-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const siteId = parseInt(this.getAttribute('data-id'));
+      showSiteDetails(siteId);
     });
-}
-
-// Ленивая загрузка
-function initLazyVideo() {
-    const lazyVideos = document.querySelectorAll('.lazy-video');
-    
-    const lazyVideoObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const video = entry.target;
-            const sources = video.querySelectorAll('source');
-            
-            sources.forEach(source => {
-            source.src = source.dataset.src;
-            });
-            
-            video.load();
-            lazyVideoObserver.unobserve(video);
-        }
-        });
-    });
-
-    lazyVideos.forEach(video => {
-        lazyVideoObserver.observe(video);
-    });
+  });
 }
 
 function filterSites() {
@@ -347,21 +330,13 @@ function showSiteDetails(siteId) {
     // Показываем модальное окно
     document.getElementById('site-modal').classList.remove('hidden');
 
-    // Настраиваем кнопку просмотра сайта
+    // Настраиваем кнопку покупки
     const buyButton = document.getElementById('buy-button');
     if (buyButton) {
         buyButton.textContent = "Посмотреть сайт";
         buyButton.onclick = function() {
             if (site.url) {
-                if (window.Telegram?.WebApp?.openLink) {
-                    // Открываем внутри Telegram WebApp
-                    Telegram.WebApp.openLink(site.url, { 
-                        try_instant_view: true // Пробуем открыть как Instant View
-                    });
-                } else {
-                    // Фолбэк для обычного браузера
-                    window.open(site.url, '_blank', 'noopener,noreferrer');
-                }
+                tg ? tg.openLink(site.url) : window.open(site.url, '_blank');
             } else {
                 alert("Ссылка на сайт не указана.");
             }

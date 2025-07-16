@@ -136,17 +136,29 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .video-container {
+        /* Для видео */
+        .video-wrapper {
             position: relative;
         }
-
-        .video-container video {
-            z-index: 1;
+        .video-wrapper video {
+            display: block;
+            pointer-events: none;
         }
 
-        .video-container > div {
-            z-index: 2;
-            pointer-events: auto; /* Разрешаем клики */
+        /* Для модального окна */
+        #site-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #site-modal:not(.hidden) {
+            display: flex;
         }
         
         /* Адаптация под Telegram WebApp */
