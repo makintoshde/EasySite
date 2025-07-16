@@ -9,7 +9,6 @@ if (tg) {
 // Глобальные переменные
 let mobileMenu = null;
 let currentSite = null;
-let isFirstLoad = true;
 
 // Данные о сайтах
 const sites = [
@@ -58,38 +57,44 @@ const sites = [
 
 // Основная функция инициализации
 function initApp() {
-  // Настройка viewport для Telegram
+  console.log('Инициализация приложения');
+  
+  // 1. Принудительно показываем главную страницу
+  showPage('home', true);
+  
+  // 2. Настройка viewport для Telegram
   if (tg) {
     setupTelegramViewport();
   }
 
-  // Инициализация компонентов
+  // 3. Инициализация компонентов
   initComponents();
   
-  // Первоначальная загрузка страницы
-  loadInitialPage();
-  
-  // После полной загрузки
+  // 4. Корректировка макета после отрисовки
   setTimeout(() => {
-    isFirstLoad = false;
     adjustLayout();
-    forceRedraw(); // Принудительное обновление отображения
-  }, 100);
+    forceRedraw();
+  }, 50);
 }
 
 function setupTelegramViewport() {
   // Установка безопасных зон
-  const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
   document.documentElement.style.setProperty('--tg-viewport-height', `${window.innerHeight}px`);
   
   // Применение темной темы
   if (tg.colorScheme === 'dark') {
     document.documentElement.classList.add('dark');
   }
+  
+  // Настройка кнопки "Закрыть"
+  tg.BackButton.setText("Закрыть");
+  tg.BackButton.onClick(() => tg.close());
+  tg.BackButton.hide();
 }
 
 function initComponents() {
+  console.log('Инициализация компонентов');
+  
   // Бургер-меню
   initBurgerMenu();
 
@@ -113,31 +118,34 @@ function initBurgerMenu() {
   mobileMenu = document.getElementById('mobile-menu');
   const closeMenu = document.getElementById('close-menu');
 
-  burgerButton?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    mobileMenu.classList.remove('translate-x-full');
-  });
+  if (burgerButton && mobileMenu && closeMenu) {
+    burgerButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mobileMenu.classList.remove('translate-x-full');
+    });
 
-  closeMenu?.addEventListener('click', () => {
-    mobileMenu.classList.add('translate-x-full');
-  });
+    closeMenu.addEventListener('click', () => {
+      mobileMenu.classList.add('translate-x-full');
+    });
 
-  document.addEventListener('click', (event) => {
-    if (!mobileMenu.classList.contains('translate-x-full')) {
-      const isClickInside = mobileMenu.contains(event.target) || 
-                          burgerButton.contains(event.target);
-      if (!isClickInside) {
-        mobileMenu.classList.add('translate-x-full');
+    document.addEventListener('click', (event) => {
+      if (!mobileMenu.classList.contains('translate-x-full')) {
+        const isClickInside = mobileMenu.contains(event.target) || 
+                            burgerButton.contains(event.target);
+        if (!isClickInside) {
+          mobileMenu.classList.add('translate-x-full');
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 function initNavigation() {
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      navigateTo(link.dataset.page);
+      const page = link.getAttribute('data-page');
+      navigateTo(page);
     });
   });
 
@@ -145,24 +153,6 @@ function initNavigation() {
     const page = window.location.hash.substring(1) || 'home';
     showPage(page);
   });
-}
-
-function initCatalog() {
-  renderSites(sites);
-  
-  document.getElementById('category-filter')?.addEventListener('change', filterSites);
-  document.getElementById('theme-filter')?.addEventListener('change', filterSites);
-  document.getElementById('search-input')?.addEventListener('input', filterSites);
-}
-
-function initModal() {
-  document.getElementById('close-modal')?.addEventListener('click', closeModal);
-  document.getElementById('buy-button')?.addEventListener('click', handleBuyButtonClick);
-}
-
-function loadInitialPage() {
-  const page = window.location.hash.substring(1) || 'home';
-  showPage(page, true);
 }
 
 function navigateTo(page) {
@@ -175,6 +165,8 @@ function navigateTo(page) {
 }
 
 function showPage(page, initialLoad = false) {
+  console.log(`Показ страницы: ${page}`);
+  
   // Скрываем все страницы
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
@@ -202,14 +194,13 @@ function showPage(page, initialLoad = false) {
       tg.BackButton.hide();
     } else {
       tg.BackButton.show();
-      tg.BackButton.onClick(() => navigateTo('home'));
     }
   }
 }
 
 function updateNavLinks(activePage) {
   document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.dataset.page === activePage) {
+    if (link.getAttribute('data-page') === activePage) {
       link.classList.add('active');
     } else {
       link.classList.remove('active');
@@ -226,7 +217,7 @@ function adjustLayout() {
     
     if (tg) {
       main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
-      main.style.minHeight = `calc(var(--tg-viewport-height, 100vh) - ${headerHeight}px)`;
+      main.style.minHeight = `calc(var(--tg-viewport-height) - ${headerHeight}px)`;
     } else {
       main.style.paddingTop = `${headerHeight}px`;
       main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
@@ -235,11 +226,18 @@ function adjustLayout() {
 }
 
 function forceRedraw() {
-  // Принудительный рефлоу для применения стилей
   const body = document.body;
   body.style.display = 'none';
-  body.offsetHeight; // Триггер рефлоу
+  body.offsetHeight;
   body.style.display = '';
+}
+
+function initCatalog() {
+  renderSites(sites);
+  
+  document.getElementById('category-filter')?.addEventListener('change', filterSites);
+  document.getElementById('theme-filter')?.addEventListener('change', filterSites);
+  document.getElementById('search-input')?.addEventListener('input', filterSites);
 }
 
 function renderSites(sitesToRender) {
@@ -310,6 +308,11 @@ function filterSites() {
   }
   
   renderSites(filteredSites);
+}
+
+function initModal() {
+  document.getElementById('close-modal')?.addEventListener('click', closeModal);
+  document.getElementById('buy-button')?.addEventListener('click', handleBuyButtonClick);
 }
 
 function showSiteDetails(siteId) {
