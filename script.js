@@ -343,13 +343,21 @@ function showSiteDetails(siteId) {
     // Показываем модальное окно
     document.getElementById('site-modal').classList.remove('hidden');
 
-    // Настраиваем кнопку покупки
+    // Настраиваем кнопку просмотра сайта
     const buyButton = document.getElementById('buy-button');
     if (buyButton) {
         buyButton.textContent = "Посмотреть сайт";
         buyButton.onclick = function() {
             if (site.url) {
-                tg ? tg.openLink(site.url) : window.open(site.url, '_blank');
+                if (window.Telegram?.WebApp?.openLink) {
+                    // Открываем внутри Telegram WebApp
+                    Telegram.WebApp.openLink(site.url, { 
+                        try_instant_view: true // Пробуем открыть как Instant View
+                    });
+                } else {
+                    // Фолбэк для обычного браузера
+                    window.open(site.url, '_blank', 'noopener,noreferrer');
+                }
             } else {
                 alert("Ссылка на сайт не указана.");
             }
