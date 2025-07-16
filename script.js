@@ -26,7 +26,8 @@ const sites = [
         category: "portfolio",
         theme: "light",
         image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-        time: "2-3 дня"
+        time: "2-3 дня",
+        url: "./sites/svai/index.html"
     },
     {
         id: 3,
@@ -66,6 +67,9 @@ function initApp() {
         }
     }
 
+    // Принудительно устанавливаем отступы до инициализации компонентов
+    adjustLayout();
+
     // Инициализация компонентов
     initBurgerMenu();
     initNavigation();
@@ -75,8 +79,8 @@ function initApp() {
     // Принудительно показываем главную страницу
     showPage('home');
     
-    // Корректировка макета
-    adjustLayout();
+    // Повторная корректировка макета после загрузки
+    setTimeout(adjustLayout, 100);
 }
 
 function initBurgerMenu() {
@@ -121,6 +125,10 @@ function initNavigation() {
     window.addEventListener('popstate', () => {
         const page = window.location.hash.substring(1) || 'home';
         showPage(page);
+    });
+    // Обновляем отступы при изменении размера окна
+    window.addEventListener('resize', () => {
+        setTimeout(adjustLayout, 100);
     });
 }
 
@@ -183,14 +191,28 @@ function adjustLayout() {
     const main = document.querySelector('main');
     
     if (header && main) {
+        // Получаем полную высоту шапки с учетом padding
         const headerHeight = header.offsetHeight;
-        main.style.paddingTop = `${headerHeight}px`;
+        
+        // Применяем отступ для основного содержимого
+        if (tg) {
+            // Для Telegram учитываем safe-area
+            main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
+            main.style.marginTop = '0';
+        } else {
+            // Для обычного браузера
+            main.style.paddingTop = `${headerHeight}px`;
+            main.style.marginTop = '0';
+        }
+        
+        // Устанавливаем минимальную высоту содержимого
         main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
         
-        // Для Telegram учитываем safe-area
-        if (tg) {
-            main.style.paddingTop = `calc(${headerHeight}px + env(safe-area-inset-top))`;
-        }
+        console.log('Layout adjusted:', {
+            headerHeight,
+            paddingTop: main.style.paddingTop,
+            minHeight: main.style.minHeight
+        });
     }
 }
 
