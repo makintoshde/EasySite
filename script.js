@@ -323,17 +323,6 @@ function showSiteDetails(siteId) {
             }
         };
     }
-
-    // Telegram MainButton
-    if (tg) {
-        tg.MainButton.setText("Купить сайт");
-        tg.MainButton.onClick(() => {
-            if (site.url) {
-                tg.openLink(site.url);
-            }
-        });
-        tg.MainButton.show();
-    }
 }
 
 function handleBuyButtonClick() {
