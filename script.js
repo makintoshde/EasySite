@@ -1,3 +1,40 @@
+// Прокрутка
+
+// (function() {
+//     // Настройки (можно менять)
+//     const config = {
+//         startDelay: 5,          // Задержка перед стартом (секунд)
+//         pixelsPerSecond: 300    // Скорость прокрутки (пикселей в секунду)
+//     };
+    
+//     console.log(`Прокрутка начнётся через ${config.startDelay} сек со скоростью ${config.pixelsPerSecond}px/сек`);
+
+//     setTimeout(() => {
+//         const startTime = Date.now();
+//         const startPos = window.scrollY;
+//         const maxPos = document.body.scrollHeight - window.innerHeight;
+//         const distance = maxPos - startPos;
+//         const duration = distance / config.pixelsPerSecond * 1000; // в мс
+        
+//         function scrollStep() {
+//             const elapsed = Date.now() - startTime;
+//             const progress = Math.min(elapsed / duration, 1);
+            
+//             // Линейная прокрутка с постоянной скоростью
+//             window.scrollTo(0, startPos + distance * progress);
+            
+//             if (progress < 1) {
+//                 requestAnimationFrame(scrollStep);
+//             } else {
+//                 console.log('Прокрутка завершена');
+//             }
+//         }
+        
+//         requestAnimationFrame(scrollStep);
+        
+//     }, config.startDelay * 1000);
+// })();
+
 // Telegram WebApp инициализация
 let tg = window.Telegram?.WebApp;
 
@@ -14,7 +51,7 @@ const sites = [
         price: "123 руб.",
         category: "landing",
         theme: "light",
-        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+        video: "./media-intro/svai.webm",
         time: "1-2 дня",
         url: "./sites/svai/index.html"
     },
@@ -218,28 +255,31 @@ function initCatalog() {
 
 function renderSites(sitesToRender) {
     const container = document.getElementById('sites-container');
-    if (!container) {
-        console.error('Sites container not found');
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = '';
-    
-    if (!sitesToRender || sitesToRender.length === 0) {
-        container.innerHTML = '<p class="text-center py-4 text-gray-500">Нет доступных сайтов</p>';
-        return;
-    }
     
     sitesToRender.forEach(site => {
         const categoryClass = getCategoryClass(site.category);
         const categoryName = getCategoryName(site.category);
         
         const card = document.createElement('div');
-        card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden cursor-pointer'; // Добавлен cursor-pointer
-        card.dataset.id = site.id; // Добавляем ID сайта в data-атрибут
+        card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden cursor-pointer';
+        card.dataset.id = site.id;
+        
+        // Определяем, что показывать - видео или изображение
+        const mediaContent = site.video 
+            ? `<video autoplay loop muted playsinline class="w-full h-full object-cover">
+                  <source src="${site.video}" type="video/webm">
+                  Ваш браузер не поддерживает видео
+               </video>`
+            : `<img src="${site.image}" alt="${site.title}" class="w-full h-full object-cover">`;
         
         card.innerHTML = `
-            <img src="${site.image}" alt="${site.title}" class="w-full h-48 object-cover">
+            <div class="relative h-48 overflow-hidden">
+                ${mediaContent}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+            </div>
             <div class="p-4">
                 <div class="flex items-start justify-between mb-2">
                     <h3 class="font-bold text-lg">${site.title}</h3>
@@ -315,13 +355,32 @@ function showSiteDetails(siteId) {
 
     currentSite = site;
 
-    // Заполняем модальное окно данными
+    // Заполняем модальное окно
     document.getElementById('modal-title').textContent = site.title;
-    document.getElementById('modal-image').src = site.image;
-    document.getElementById('modal-image').alt = site.title;
+    
+    // Обновляем медиа-контент (видео или изображение)
+    const modalMediaContainer = document.getElementById('modal-media-container');
+    if (modalMediaContainer) {
+        if (site.video) {
+            modalMediaContainer.innerHTML = `
+                <video id="modal-video" autoplay loop muted playsinline class="w-full h-full object-cover">
+                    <source src="${site.video}" type="video/webm">
+                    Ваш браузер не поддерживает видео
+                </video>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+            `;
+        } else {
+            modalMediaContainer.innerHTML = `
+                <img src="${site.image}" alt="${site.title}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+            `;
+        }
+    }
+    
     document.getElementById('modal-description').textContent = site.description;
     document.getElementById('modal-price').textContent = site.price;
     document.getElementById('modal-time').textContent = `Срок разработки: ${site.time}`;
+
 
     const categoryClass = getCategoryClass(site.category);
     const categoryName = getCategoryName(site.category);
@@ -335,7 +394,7 @@ function showSiteDetails(siteId) {
 
     // Добавляем обработчик клика вне модального окна
     modal.addEventListener('click', function(e) {
-        if (e.target === modal) { // Клик именно на фоне, а не на содержимом модалки
+        if (e.target === modal) {
             closeModal();
         }
     });
@@ -348,7 +407,7 @@ function showSiteDetails(siteId) {
             if (site.url) {
                 createPreviewPage(site);
                 showPage('site-preview');
-                closeModal(); // Закрываем модальное окно при переходе к превью
+                closeModal();
             } else {
                 alert("Ссылка на сайт не указана.");
             }
