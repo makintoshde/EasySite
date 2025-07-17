@@ -190,17 +190,21 @@ function updateNavLinks(activePage) {
 }
 
 function adjustLayout() {
-  const header = document.querySelector('.tg-header');
-  const main = document.querySelector('.tg-content');
-  
-  if (header && main) {
-    // Учитываем safe-area (актуально для iPhone)
-    const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0;
-    const headerHeight = header.offsetHeight + safeArea;
+    const header = document.querySelector('.tg-header');
+    const main = document.querySelector('.tg-content');
+    const previewPage = document.getElementById('site-preview');
     
-    main.style.marginTop = `${headerHeight}px`;
-    main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
-  }
+    if (header && main) {
+        const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0;
+        const headerHeight = header.offsetHeight + safeArea;
+        
+        main.style.marginTop = `${headerHeight}px`;
+        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
+        
+        if (previewPage) {
+            previewPage.style.top = `${headerHeight}px`;
+        }
+    }
 }
 
 function initCatalog() {
@@ -231,7 +235,9 @@ function renderSites(sitesToRender) {
         const categoryName = getCategoryName(site.category);
         
         const card = document.createElement('div');
-        card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden';
+        card.className = 'site-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden cursor-pointer'; // Добавлен cursor-pointer
+        card.dataset.id = site.id; // Добавляем ID сайта в data-атрибут
+        
         card.innerHTML = `
             <img src="${site.image}" alt="${site.title}" class="w-full h-48 object-cover">
             <div class="p-4">
@@ -252,9 +258,21 @@ function renderSites(sitesToRender) {
         container.appendChild(card);
     });
     
-    // Добавляем обработчики для кнопок "Подробнее"
+    // Обработчик клика по карточке
+    document.querySelectorAll('.site-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Проверяем, не был ли клик по кнопке "Подробнее"
+            if (!e.target.closest('.view-details-btn')) {
+                const siteId = parseInt(this.dataset.id);
+                showSiteDetails(siteId);
+            }
+        });
+    });
+    
+    // Обработчик клика по кнопке "Подробнее" (оставляем существующий)
     document.querySelectorAll('.view-details-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Предотвращаем всплытие события до карточки
             const siteId = parseInt(this.getAttribute('data-id'));
             showSiteDetails(siteId);
         });
@@ -312,7 +330,15 @@ function showSiteDetails(siteId) {
     categoryElement.className = `px-3 py-1 ${categoryClass} text-sm rounded-full`;
 
     // Показываем модальное окно
-    document.getElementById('site-modal').classList.remove('hidden');
+    const modal = document.getElementById('site-modal');
+    modal.classList.remove('hidden');
+
+    // Добавляем обработчик клика вне модального окна
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) { // Клик именно на фоне, а не на содержимом модалки
+            closeModal();
+        }
+    });
 
     // Настраиваем кнопку просмотра сайта
     const buyButton = document.getElementById('buy-button');
@@ -320,9 +346,9 @@ function showSiteDetails(siteId) {
         buyButton.textContent = "Посмотреть сайт";
         buyButton.onclick = function() {
             if (site.url) {
-                // Создаем временную страницу для предпросмотра
                 createPreviewPage(site);
                 showPage('site-preview');
+                closeModal(); // Закрываем модальное окно при переходе к превью
             } else {
                 alert("Ссылка на сайт не указана.");
             }
@@ -331,6 +357,8 @@ function showSiteDetails(siteId) {
 }
 
 function createPreviewPage(site) {
+    document.body.classList.add('site-preview-active');
+    
     let previewContainer = document.getElementById('site-preview');
     if (!previewContainer) {
         previewContainer = document.createElement('div');
@@ -340,13 +368,37 @@ function createPreviewPage(site) {
     }
     
     previewContainer.innerHTML = `
-        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden h-[calc(100vh-180px)]">
-            <iframe src="${site.url}" class="w-full h-full border-0"></iframe>
+        <div class="preview-wrapper">
+            <iframe src="${site.url}"></iframe>
         </div>
     `;
+    
+    // Изменено: кнопка закрытия теперь слева
+    const closeButton = document.createElement('button');
+    closeButton.className = 'absolute top-6 left-6 z-50 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow-lg backdrop-blur-sm';
+    closeButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    `;
+    closeButton.addEventListener('click', () => showPage('catalog'));
+    previewContainer.appendChild(closeButton);
+    
+    // Обработчик для восстановления скролла
+    const observer = new MutationObserver(() => {
+        if (!previewContainer.classList.contains('active')) {
+            document.body.classList.remove('site-preview-active');
+            observer.disconnect();
+        }
+    });
+    observer.observe(previewContainer, { attributes: true, attributeFilter: ['class'] });
 }
 
 function handleBackButton(currentPage) {
+    if (currentPage === 'site-preview') {
+        document.body.classList.remove('site-preview-active');
+    }
+    
     switch(currentPage) {
         case 'catalog':
             showPage('home');
@@ -356,7 +408,7 @@ function handleBackButton(currentPage) {
             showPage('catalog');
             break;
         default:
-            showPage('catalog');
+            showPage('home');
     }
 }
 
@@ -374,7 +426,10 @@ function handleBuyButtonClick() {
 }
 
 function closeModal() {
-    document.getElementById('site-modal').classList.add('hidden');
+    const modal = document.getElementById('site-modal');
+    modal.classList.add('hidden');
+    // Удаляем обработчик клика по фону
+    modal.removeEventListener('click', modal.clickHandler);
     currentSite = null;
     if (tg) {
         tg.MainButton.hide();
