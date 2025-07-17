@@ -340,7 +340,7 @@ function createPreviewPage(site) {
     }
     
     previewContainer.innerHTML = `
-        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden h-[calc(100vh-180px)]">
+        <div class="flex-grow bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
             <iframe src="${site.url}" class="w-full h-full border-0"></iframe>
         </div>
     `;
@@ -352,11 +352,11 @@ function handleBackButton(currentPage) {
             showPage('home');
             break;
         case 'about':
-        case 'site-preview':
+        case 'site-preview': // Добавляем обработку страницы предпросмотра
             showPage('catalog');
             break;
         default:
-            showPage('catalog');
+            showPage('home');
     }
 }
 
