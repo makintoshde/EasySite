@@ -166,10 +166,8 @@ function showPage(page) {
         }
     }
 
-    // Обновляем активные ссылки в навигации
     updateNavLinks(page);
 
-    // Управление кнопкой "Назад" в Telegram
     if (tg) {
         if (page === 'home') {
             tg.BackButton.hide();
@@ -178,21 +176,6 @@ function showPage(page) {
             tg.BackButton.onClick(() => handleBackButton(page));
             tg.BackButton.show();
         }
-    }
-}
-
-function handleBackButton(currentPage) {
-    switch(currentPage) {
-        case 'catalog':
-            showPage('home');
-            break;
-        case 'about':
-        case 'site-preview': // Добавьте эту страницу для предпросмотра сайтов
-            showPage('catalog');
-            break;
-        default:
-            // Для всех остальных страниц возвращаем в каталог
-            showPage('catalog');
     }
 }
 
@@ -348,7 +331,6 @@ function showSiteDetails(siteId) {
 }
 
 function createPreviewPage(site) {
-    // Создаем контейнер для предпросмотра, если его нет
     let previewContainer = document.getElementById('site-preview');
     if (!previewContainer) {
         previewContainer = document.createElement('div');
@@ -357,39 +339,46 @@ function createPreviewPage(site) {
         document.querySelector('main').appendChild(previewContainer);
     }
     
-    // Заполняем контент
     previewContainer.innerHTML = `
-        <div class="p-4">
-            <h2 class="text-2xl font-bold mb-4">${site.title}</h2>
-            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-                <iframe src="${site.url}" class="w-full h-96 border-0"></iframe>
-            </div>
-            <p class="mt-4">${site.description}</p>
+        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden h-[calc(100vh-180px)]">
+            <iframe src="${site.url}" class="w-full h-full border-0"></iframe>
         </div>
     `;
 }
 
+function handleBackButton(currentPage) {
+    switch(currentPage) {
+        case 'catalog':
+            showPage('home');
+            break;
+        case 'about':
+        case 'site-preview':
+            showPage('catalog');
+            break;
+        default:
+            showPage('catalog');
+    }
+}
+
 function handleBuyButtonClick() {
     if (currentSite?.url) {
-        if (window.Telegram?.WebApp?.openLink) {
-            Telegram.WebApp.openLink(currentSite.url, {
-                try_instant_view: true
-            });
-        } else {
-            window.open(currentSite.url, '_blank', 'noopener,noreferrer');
-        }
+        // Полностью закрываем модальное окно
+        closeModal();
+        
+        // Создаем и показываем страницу предпросмотра
+        createPreviewPage(currentSite);
+        showPage('site-preview');
     } else {
         alert("Ссылка на сайт не указана.");
     }
-    closeModal();
 }
 
 function closeModal() {
     document.getElementById('site-modal').classList.add('hidden');
+    currentSite = null;
     if (tg) {
         tg.MainButton.hide();
     }
-    currentSite = null;
 }
 
 // Вспомогательные функции
