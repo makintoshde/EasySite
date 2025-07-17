@@ -94,9 +94,8 @@ const sites = [
 ];
 
 // Основная функция инициализации
+// Основная функция инициализации
 function initApp() {
-    console.log('Initializing app...');
-    
     console.log('Initializing app...');
     
     // Инициализация Telegram WebApp
@@ -119,30 +118,22 @@ function initApp() {
 
     // Добавляем обработчик для ссылки на бота
     document.getElementById('bot-link')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (tg) {
-            // Закрываем WebApp и открываем чат с ботом
-            tg.close();
-            tg.openTelegramLink('https://t.me/EasySiteAppBot');
-        } else {
-            // Для браузера просто открываем ссылку
-            window.open('https://t.me/EasySiteAppBot', '_blank');
+        // Если в Telegram WebApp
+        if (window.Telegram?.WebApp) {
+            e.preventDefault();
+            Telegram.WebApp.close();
+            Telegram.WebApp.openTelegramLink('https://t.me/EasySiteAppBot');
         }
+        // В обычном браузере поведение останется стандартным
     });
 
-    // Принудительно устанавливаем отступы до инициализации компонентов
+    // Остальной код инициализации...
     adjustLayout();
-    
-    // Инициализация компонентов
     initBurgerMenu();
     initNavigation();
     initCatalog();
     initModal();
-    
-    // Принудительно показываем главную страницу
     showPage('home');
-    
-    // Повторная корректировка макета после загрузки
     setTimeout(adjustLayout, 100);
 }
 
