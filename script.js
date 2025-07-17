@@ -97,6 +97,8 @@ const sites = [
 function initApp() {
     console.log('Initializing app...');
     
+    console.log('Initializing app...');
+    
     // Инициализация Telegram WebApp
     if (tg) {
         tg.ready();
@@ -114,6 +116,19 @@ function initApp() {
             document.documentElement.classList.add('dark');
         }
     }
+
+    // Добавляем обработчик для ссылки на бота
+    document.getElementById('bot-link')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (tg) {
+            // Закрываем WebApp и открываем чат с ботом
+            tg.close();
+            tg.openTelegramLink('https://t.me/EasySiteAppBot');
+        } else {
+            // Для браузера просто открываем ссылку
+            window.open('https://t.me/EasySiteAppBot', '_blank');
+        }
+    });
 
     // Принудительно устанавливаем отступы до инициализации компонентов
     adjustLayout();
