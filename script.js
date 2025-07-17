@@ -35,6 +35,12 @@
 //     }, config.startDelay * 1000);
 // })();
 
+// ffpeg
+
+// ffmpeg -i input.mov -c:v libvpx-vp9 -crf 30 -b:v 0 -row-mt 1 -speed 1 \
+// -c:a libopus -b:a 64k -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" \
+// -auto-alt-ref 0 -deadline good -threads 4 output.webm
+
 // Telegram WebApp инициализация
 let tg = window.Telegram?.WebApp;
 
