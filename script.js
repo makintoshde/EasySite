@@ -59,7 +59,7 @@ function initApp() {
         tg.ready();
         tg.expand();
         tg.enableClosingConfirmation();
-        tg.BackButton.hide();
+        tg.BackButton.hide(); // Сначала скрываем кнопку
         
         // Устанавливаем обработчик для кнопки Назад
         tg.BackButton.onClick(() => {
@@ -155,6 +155,19 @@ function showPage(page) {
     document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('active');
     });
+
+    // Скрываем iframe предпросмотра, если он есть и мы переходим не на него
+    if (page !== 'site-preview') {
+        const previewContainer = document.getElementById('site-preview');
+        if (previewContainer) {
+            previewContainer.classList.remove('active');
+            // Дополнительно можно удалить содержимое iframe
+            const iframe = previewContainer.querySelector('iframe');
+            if (iframe) {
+                iframe.src = ''; // Очищаем src, чтобы остановить загрузку
+            }
+        }
+    }
 
     // Показываем выбранную страницу
     const pageElement = document.getElementById(page);
@@ -332,18 +345,29 @@ function showSiteDetails(siteId) {
 
 function createPreviewPage(site) {
     let previewContainer = document.getElementById('site-preview');
-    if (!previewContainer) {
+    
+    // Если контейнер уже существует, просто обновляем его содержимое
+    if (previewContainer) {
+        previewContainer.innerHTML = `
+            <div class="mb-4">
+                <h2 class="text-xl font-bold">Предпросмотр: ${site.title}</h2>
+            </div>
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden" style="height: calc(100vh - 180px)">
+                <iframe src="${site.url}" class="w-full h-full border-0"></iframe>
+            </div>
+        `;
+    } else {
+        // Если контейнера нет, создаем новый
         previewContainer = document.createElement('div');
         previewContainer.id = 'site-preview';
         previewContainer.className = 'page';
+        previewContainer.innerHTML = `
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden" style="height: calc(100vh - 180px)">
+                <iframe src="${site.url}" class="w-full h-full border-0"></iframe>
+            </div>
+        `;
         document.querySelector('main').appendChild(previewContainer);
     }
-    
-    previewContainer.innerHTML = `
-        <div class="flex-grow bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-            <iframe src="${site.url}" class="w-full h-full border-0"></iframe>
-        </div>
-    `;
 }
 
 function handleBackButton(currentPage) {
@@ -352,7 +376,17 @@ function handleBackButton(currentPage) {
             showPage('home');
             break;
         case 'about':
-        case 'site-preview': // Добавляем обработку страницы предпросмотра
+            showPage('catalog');
+            break;
+        case 'site-preview':
+            // При возврате из предпросмотра очищаем iframe
+            const previewContainer = document.getElementById('site-preview');
+            if (previewContainer) {
+                const iframe = previewContainer.querySelector('iframe');
+                if (iframe) {
+                    iframe.src = '';
+                }
+            }
             showPage('catalog');
             break;
         default:
@@ -378,6 +412,14 @@ function closeModal() {
     currentSite = null;
     if (tg) {
         tg.MainButton.hide();
+    }
+
+    const previewContainer = document.getElementById('site-preview');
+    if (previewContainer) {
+        const iframe = previewContainer.querySelector('iframe');
+        if (iframe) {
+            iframe.src = '';
+        }
     }
 }
 
